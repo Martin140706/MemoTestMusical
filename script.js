@@ -8,12 +8,41 @@ const NOTAS = [
   { nombre: "La", emoji: "🟣", frecuencia: 440 },
 ];
 
-// ── ESTADO DEL JUEGO ──
+const NUMEROS_VOZ = {
+  uno: 1,
+  dos: 2,
+  tres: 3,
+  cuatro: 4,
+  cinco: 5,
+  seis: 6,
+  siete: 7,
+  ocho: 8,
+  nueve: 9,
+  diez: 10,
+  once: 11,
+  doce: 12,
+  1: 1,
+  2: 2,
+  3: 3,
+  4: 4,
+  5: 5,
+  6: 6,
+  7: 7,
+  8: 8,
+  9: 9,
+  10: 10,
+  11: 11,
+  12: 12,
+};
+
+// ── ESTADO ──
 let cartas = [];
 let seleccionadas = [];
 let paresEncontrados = 0;
 let bloqueado = false;
 let audioCtx = null;
+let reconocimiento = null;
+let escuchando = false;
 
 // ── ELEMENTOS ──
 const pantallaInicio = document.getElementById("pantalla-inicio");
@@ -23,14 +52,16 @@ const tablero = document.getElementById("tablero");
 const contadorPares = document.getElementById("contador-pares");
 const btnIniciar = document.getElementById("btn-iniciar");
 const btnReiniciar = document.getElementById("btn-reiniciar");
+const btnVoz = document.getElementById("btn-voz");
 
-// ── VOZ ──
-function hablar(texto) {
+// ── VOZ (síntesis) ──
+function hablar(texto, alTerminar = null) {
   const synth = window.speechSynthesis;
   synth.cancel();
   const utterance = new SpeechSynthesisUtterance(texto);
   utterance.lang = "es-AR";
   utterance.rate = 0.95;
+  if (alTerminar) utterance.onend = alTerminar;
   synth.speak(utterance);
 }
 
@@ -38,22 +69,17 @@ function hablar(texto) {
 function reproducirNota(frecuencia, duracion = 0.4) {
   if (!audioCtx)
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
   const oscilador = audioCtx.createOscillator();
   const ganancia = audioCtx.createGain();
-
   oscilador.connect(ganancia);
   ganancia.connect(audioCtx.destination);
-
   oscilador.type = "sine";
   oscilador.frequency.setValueAtTime(frecuencia, audioCtx.currentTime);
-
   ganancia.gain.setValueAtTime(0.5, audioCtx.currentTime);
   ganancia.gain.exponentialRampToValueAtTime(
     0.001,
     audioCtx.currentTime + duracion,
   );
-
   oscilador.start(audioCtx.currentTime);
   oscilador.stop(audioCtx.currentTime + duracion);
 }
@@ -87,29 +113,28 @@ function iniciarJuego() {
   tablero.innerHTML = "";
   contadorPares.textContent = "Pares: 0 / 6";
 
-  // Crear los 12 pares (6 notas x 2)
   const mazo = mezclar([...NOTAS, ...NOTAS]);
 
   mazo.forEach((nota, index) => {
-    const carta = {
+    const numero = index + 1;
+    cartas.push({
       id: index,
       nota: nota,
       volteada: false,
       encontrada: false,
-    };
-    cartas.push(carta);
+    });
 
     const div = document.createElement("div");
     div.classList.add("carta");
     div.dataset.id = index;
-    div.textContent = "🎵";
+    div.textContent = numero;
     div.addEventListener("click", () => alTocarCarta(index));
     tablero.appendChild(div);
   });
 
   mostrarPantalla("juego");
   hablar(
-    "Encontrá los pares que suenan igual. Tocá una carta para escuchar su nota.",
+    "Encontrá los pares que suenan igual. Tocá una carta o decí su número.",
   );
 }
 
@@ -118,17 +143,24 @@ function alTocarCarta(id) {
   if (bloqueado) return;
 
   const carta = cartas[id];
-  if (carta.volteada || carta.encontrada) return;
 
-  // Voltear carta
+  if (carta.encontrada) {
+    hablar(`La carta ${id + 1} ya fue encontrada.`);
+    return;
+  }
+
+  if (carta.volteada) {
+    hablar(`La carta ${id + 1} ya está dada vuelta.`);
+    return;
+  }
+
   carta.volteada = true;
   const div = document.querySelector(`.carta[data-id="${id}"]`);
   div.classList.add("volteada");
   div.textContent = carta.nota.emoji;
 
-  // Sonar y hablar
   reproducirNota(carta.nota.frecuencia);
-  hablar(`Nota ${carta.nota.nombre}`);
+  hablar(`Carta ${id + 1}, nota ${carta.nota.nombre}`);
 
   seleccionadas.push(id);
 
@@ -143,12 +175,10 @@ function verificarPar() {
   const [id1, id2] = seleccionadas;
   const carta1 = cartas[id1];
   const carta2 = cartas[id2];
-
   const div1 = document.querySelector(`.carta[data-id="${id1}"]`);
   const div2 = document.querySelector(`.carta[data-id="${id2}"]`);
 
   if (carta1.nota.nombre === carta2.nota.nombre) {
-    // ¡Par correcto!
     carta1.encontrada = true;
     carta2.encontrada = true;
     div1.classList.remove("volteada");
@@ -158,15 +188,16 @@ function verificarPar() {
 
     paresEncontrados++;
     contadorPares.textContent = `Pares: ${paresEncontrados} / 6`;
-    hablar(`¡Muy bien! Par de ${carta1.nota.nombre} encontrado.`);
+    hablar(
+      `¡Muy bien! Par de ${carta1.nota.nombre} encontrado. Pares: ${paresEncontrados} de 6.`,
+    );
 
     if (paresEncontrados === 6) {
-      setTimeout(ganar, 1200);
+      setTimeout(ganar, 1500);
     } else {
       bloqueado = false;
     }
   } else {
-    // Error
     div1.classList.add("error");
     div2.classList.add("error");
     reproducirError();
@@ -177,8 +208,8 @@ function verificarPar() {
       carta2.volteada = false;
       div1.classList.remove("volteada", "error");
       div2.classList.remove("volteada", "error");
-      div1.textContent = "🎵";
-      div2.textContent = "🎵";
+      div1.textContent = id1 + 1;
+      div2.textContent = id2 + 1;
       bloqueado = false;
     }, 1000);
   }
@@ -191,6 +222,60 @@ function ganar() {
   reproducirVictoria();
   hablar("¡Felicitaciones! Encontraste todos los pares. ¡Ganaste!");
   setTimeout(() => mostrarPantalla("victoria"), 1500);
+}
+
+// ── RECONOCIMIENTO DE VOZ ──
+function iniciarReconocimiento() {
+  const SpeechRecognition =
+    window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (!SpeechRecognition) {
+    hablar("Tu navegador no soporta reconocimiento de voz. Probá con Chrome.");
+    return;
+  }
+
+  if (escuchando) {
+    reconocimiento.stop();
+    return;
+  }
+
+  reconocimiento = new SpeechRecognition();
+  reconocimiento.lang = "es-AR";
+  reconocimiento.interimResults = false;
+  reconocimiento.maxAlternatives = 3;
+
+  reconocimiento.onstart = () => {
+    escuchando = true;
+    btnVoz.classList.add("escuchando");
+  };
+
+  reconocimiento.onend = () => {
+    escuchando = false;
+    btnVoz.classList.remove("escuchando");
+  };
+
+  reconocimiento.onresult = (event) => {
+    // Buscar en todas las alternativas
+    for (let i = 0; i < event.results[0].length; i++) {
+      const texto = event.results[0][i].transcript.toLowerCase().trim();
+      const numero = NUMEROS_VOZ[texto];
+      if (numero !== undefined) {
+        alTocarCarta(numero - 1);
+        return;
+      }
+    }
+    hablar("No entendí. Decí un número del 1 al 12.");
+  };
+
+  reconocimiento.onerror = (event) => {
+    escuchando = false;
+    btnVoz.classList.remove("escuchando");
+    if (event.error !== "no-speech") {
+      hablar("Hubo un error con el micrófono. Intentá de nuevo.");
+    }
+  };
+
+  reconocimiento.start();
 }
 
 // ── CAMBIAR PANTALLA ──
@@ -207,3 +292,4 @@ function mostrarPantalla(cual) {
 // ── EVENTOS ──
 btnIniciar.addEventListener("click", iniciarJuego);
 btnReiniciar.addEventListener("click", iniciarJuego);
+btnVoz.addEventListener("click", iniciarReconocimiento);
