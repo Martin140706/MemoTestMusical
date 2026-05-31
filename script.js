@@ -55,13 +55,12 @@ const btnReiniciar = document.getElementById("btn-reiniciar");
 const btnVoz = document.getElementById("btn-voz");
 
 // ── VOZ (síntesis) ──
-function hablar(texto, alTerminar = null) {
+function hablar(texto, cancelarAnterior = true) {
   const synth = window.speechSynthesis;
-  synth.cancel();
+  if (cancelarAnterior) synth.cancel();
   const utterance = new SpeechSynthesisUtterance(texto);
   utterance.lang = "es-AR";
   utterance.rate = 0.95;
-  if (alTerminar) utterance.onend = alTerminar;
   synth.speak(utterance);
 }
 
@@ -193,6 +192,7 @@ function verificarPar() {
     contadorPares.textContent = `Pares: ${paresEncontrados} / 6`;
     hablar(
       `¡Muy bien! Par de ${carta1.nota.nombre} encontrado. Pares: ${paresEncontrados} de 6.`,
+      false,
     );
 
     if (paresEncontrados === 6) {
@@ -204,7 +204,7 @@ function verificarPar() {
     div1.classList.add("error");
     div2.classList.add("error");
     reproducirError();
-    hablar("No es par. Intentá de nuevo.");
+    hablar("No es par. Intentá de nuevo.", false);
 
     setTimeout(() => {
       carta1.volteada = false;
