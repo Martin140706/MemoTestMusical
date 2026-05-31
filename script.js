@@ -40,6 +40,7 @@ let cartas = [];
 let seleccionadas = [];
 let paresEncontrados = 0;
 let bloqueado = false;
+let modoVictoria = false;
 let audioCtx = null;
 let reconocimiento = null;
 let escuchando = false;
@@ -50,7 +51,6 @@ const pantallaJuego = document.getElementById("pantalla-juego");
 const pantallaVictoria = document.getElementById("pantalla-victoria");
 const tablero = document.getElementById("tablero");
 const contadorPares = document.getElementById("contador-pares");
-const btnIniciar = document.getElementById("btn-iniciar");
 const btnReiniciar = document.getElementById("btn-reiniciar");
 const btnVoz = document.getElementById("btn-voz");
 
@@ -196,7 +196,7 @@ function verificarPar() {
     );
 
     if (paresEncontrados === 6) {
-      setTimeout(ganar, 1500);
+      setTimeout(ganar, 1800);
     } else {
       bloqueado = false;
     }
@@ -223,8 +223,13 @@ function verificarPar() {
 // ── GANAR ──
 function ganar() {
   reproducirVictoria();
-  hablar("¡Felicitaciones! Encontraste todos los pares. ¡Ganaste!");
-  setTimeout(() => mostrarPantalla("victoria"), 1500);
+  setTimeout(() => {
+    hablar(
+      "¡Felicitaciones! Encontraste todos los pares. Cuando quieras jugar de nuevo, tocá el micrófono y decí sí.",
+    );
+    modoVictoria = true;
+    mostrarPantalla("victoria");
+  }, 1500);
 }
 
 // ── RECONOCIMIENTO DE VOZ ──
@@ -258,16 +263,33 @@ function iniciarReconocimiento() {
   };
 
   reconocimiento.onresult = (event) => {
-    // Buscar en todas las alternativas
     for (let i = 0; i < event.results[0].length; i++) {
       const texto = event.results[0][i].transcript.toLowerCase().trim();
+      console.log("Escuché:", texto);
+
+      if (modoVictoria) {
+        if (
+          texto.includes("sí") ||
+          texto.includes("si") ||
+          texto.includes("dale") ||
+          texto.includes("bueno")
+        ) {
+          modoVictoria = false;
+          iniciarJuego();
+          return;
+        } else {
+          hablar("No entendí. Decí sí para jugar de nuevo.");
+          return;
+        }
+      }
+
       const numero = NUMEROS_VOZ[texto];
       if (numero !== undefined) {
         alTocarCarta(numero - 1);
         return;
       }
     }
-    hablar("No entendí. Decí un número del 1 al 12.");
+    if (!modoVictoria) hablar("No entendí. Decí un número del 1 al 12.");
   };
 
   reconocimiento.onerror = (event) => {
@@ -283,16 +305,16 @@ function iniciarReconocimiento() {
 
 // ── CAMBIAR PANTALLA ──
 function mostrarPantalla(cual) {
-  pantallaInicio.classList.add("oculto");
   pantallaJuego.classList.add("oculto");
   pantallaVictoria.classList.add("oculto");
 
-  if (cual === "inicio") pantallaInicio.classList.remove("oculto");
   if (cual === "juego") pantallaJuego.classList.remove("oculto");
   if (cual === "victoria") pantallaVictoria.classList.remove("oculto");
 }
 
 // ── EVENTOS ──
-btnIniciar.addEventListener("click", iniciarJuego);
+
 btnReiniciar.addEventListener("click", iniciarJuego);
 btnVoz.addEventListener("click", iniciarReconocimiento);
+
+window.addEventListener("load", iniciarJuego);
