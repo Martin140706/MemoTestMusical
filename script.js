@@ -169,7 +169,7 @@ function alTocarCarta(id) {
 
   if (seleccionadas.length === 2) {
     bloqueado = true;
-    setTimeout(verificarPar, 1800);
+    setTimeout(verificarPar, 5000);
   }
 }
 
