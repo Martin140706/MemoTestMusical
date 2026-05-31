@@ -106,6 +106,9 @@ function mezclar(array) {
 
 // ── INICIAR JUEGO ──
 function iniciarJuego() {
+  // Desbloquear síntesis de voz en mobile
+  const u = new SpeechSynthesisUtterance("");
+  window.speechSynthesis.speak(u);
   cartas = [];
   seleccionadas = [];
   paresEncontrados = 0;
