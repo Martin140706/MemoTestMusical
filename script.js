@@ -160,7 +160,7 @@ function alTocarCarta(id) {
   div.textContent = carta.nota.emoji;
 
   reproducirNota(carta.nota.frecuencia);
-  hablar(`Carta ${id + 1}, nota ${carta.nota.nombre}`);
+  setTimeout(() => hablar(`Carta ${id + 1}, nota ${carta.nota.nombre}`), 500);
 
   seleccionadas.push(id);
 
