@@ -48,10 +48,8 @@ let escuchando = false;
 // ── ELEMENTOS ──
 const pantallaInicio = document.getElementById("pantalla-inicio");
 const pantallaJuego = document.getElementById("pantalla-juego");
-const pantallaVictoria = document.getElementById("pantalla-victoria");
 const tablero = document.getElementById("tablero");
 const contadorPares = document.getElementById("contador-pares");
-const btnReiniciar = document.getElementById("btn-reiniciar");
 const btnVoz = document.getElementById("btn-voz");
 
 // ── VOZ (síntesis) ──
@@ -228,7 +226,6 @@ function ganar() {
       "¡Felicitaciones! Encontraste todos los pares. Cuando quieras jugar de nuevo, tocá el micrófono y decí sí.",
     );
     modoVictoria = true;
-    mostrarPantalla("victoria");
   }, 1500);
 }
 
@@ -306,15 +303,11 @@ function iniciarReconocimiento() {
 // ── CAMBIAR PANTALLA ──
 function mostrarPantalla(cual) {
   pantallaJuego.classList.add("oculto");
-  pantallaVictoria.classList.add("oculto");
 
   if (cual === "juego") pantallaJuego.classList.remove("oculto");
-  if (cual === "victoria") pantallaVictoria.classList.remove("oculto");
 }
 
 // ── EVENTOS ──
 
-btnReiniciar.addEventListener("click", iniciarJuego);
 btnVoz.addEventListener("click", iniciarReconocimiento);
-
 window.addEventListener("load", iniciarJuego);
