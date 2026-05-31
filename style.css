@@ -1,0 +1,173 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+  background: #1a1a2e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Segoe UI", sans-serif;
+  color: white;
+}
+
+/* ── PANTALLAS ── */
+#pantalla-inicio,
+#pantalla-victoria {
+  text-align: center;
+  padding: 2rem;
+}
+
+#pantalla-juego {
+  width: 100%;
+  max-width: 480px;
+  padding: 1rem;
+}
+
+.oculto {
+  display: none !important;
+}
+
+/* ── INICIO ── */
+#pantalla-inicio h1 {
+  font-size: 2.2rem;
+  margin-bottom: 0.5rem;
+  color: #e2b96f;
+}
+
+#subtitulo {
+  font-size: 1.1rem;
+  color: #a0a0c0;
+  margin-bottom: 2rem;
+}
+
+/* ── BOTONES GENERALES ── */
+button {
+  cursor: pointer;
+  border: none;
+  border-radius: 16px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  transition:
+    transform 0.1s,
+    box-shadow 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:active {
+  transform: scale(0.95);
+}
+
+#btn-iniciar,
+#btn-reiniciar {
+  background: #e2b96f;
+  color: #1a1a2e;
+  padding: 1rem 2.5rem;
+  font-size: 1.3rem;
+  box-shadow: 0 4px 20px rgba(226, 185, 111, 0.4);
+}
+
+#btn-iniciar:active,
+#btn-reiniciar:active {
+  box-shadow: none;
+}
+
+/* ── INFO JUEGO ── */
+#info-juego {
+  text-align: center;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+  color: #a0a0c0;
+}
+
+/* ── TABLERO ── */
+#tablero {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  padding: 0.5rem;
+}
+
+/* ── CARTAS ── */
+.carta {
+  aspect-ratio: 1;
+  border-radius: 20px;
+  background: #16213e;
+  border: 3px solid #0f3460;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.8rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  transition:
+    transform 0.15s,
+    background 0.2s,
+    border-color 0.2s;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.carta:active {
+  transform: scale(0.93);
+}
+
+/* Carta volteada (visible) */
+.carta.volteada {
+  background: #0f3460;
+  border-color: #e2b96f;
+}
+
+/* Carta encontrada (par correcto) */
+.carta.encontrada {
+  background: #1a472a;
+  border-color: #2ecc71;
+  animation: encontrada-pulse 0.4s ease;
+}
+
+@keyframes encontrada-pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Carta error */
+.carta.error {
+  background: #4a1020;
+  border-color: #e74c3c;
+  animation: shake 0.35s ease;
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-6px);
+  }
+  75% {
+    transform: translateX(6px);
+  }
+}
+
+/* ── VICTORIA ── */
+#pantalla-victoria h2 {
+  font-size: 2.5rem;
+  color: #e2b96f;
+  margin-bottom: 0.5rem;
+}
+
+#pantalla-victoria p {
+  font-size: 1.1rem;
+  color: #a0a0c0;
+  margin-bottom: 2rem;
+}
